@@ -1,17 +1,21 @@
+#include <stdio.h>
 #include <GL/glut.h>
 #include <iostream>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <windows.h>
+
 
 int board[3][3];	// board for gameplay
 int turn;			// current move
 int result;			// Result of the game
 bool over;			// Is the game Over?
-
+const float DEG2RAD = 3.14159/180;
+int colourize=0;
 /*
-	Sets the board for Tic Tac Toe
+	Sets the board for Tic-Tac-Toe
 */
 void Intialize()
 {
@@ -36,14 +40,6 @@ void OnKeyPress(unsigned char key,int x,int y)
 			Intialize();
 		}
 		break;
-		case 'n':
-		if(over==true)
-		{
-			exit(0);
-		}
-		break;
-		default:
-			exit(0);
 	}
 }
 
@@ -92,8 +88,10 @@ void DrawString(void *font,const char s[],float x,float y)
 void DrawLines()
 {
 	glBegin(GL_LINES);
-	glColor3f(0,0,0);
-
+	if (colourize == 0)
+		glColor3f(1,1,1);
+	else if (colourize ==1)
+		glColor3f(0,1,1);
 	glVertex2f(100,50);
 	glVertex2f(100,340);
 	glVertex2f(200,340);
@@ -109,8 +107,7 @@ void DrawLines()
 
 /*
 	Utility function to draw the circle
-*/
-void DrawCircle(float cx, float cy, float r, int num_segments)
+	void DrawCircle(float cx, float cy, float r, int num_segments)
 {
     glBegin(GL_LINE_LOOP);
     for (int i = 0; i < num_segments; i++)
@@ -122,9 +119,21 @@ void DrawCircle(float cx, float cy, float r, int num_segments)
     }
     glEnd();
 }
+*/
+void DrawCircle(float cx, float cy, float r)
+{
+    glBegin(GL_LINE_LOOP);
+    for (int i = 0; i <360; i++)
+    {
+        float degInRad = i*DEG2RAD;
+
+        glVertex2f(cx+cos(degInRad)*r, cy+sin(degInRad)*r);
+    }
+    glEnd();
+}
 
 /*
-	Function to draw the cross and circle of Tic Tac Toe
+	Function to draw the cross and circle of Tic-Tac-Toe
 */
 void DrawXO()
 {
@@ -144,7 +153,7 @@ void DrawXO()
 			else if(board[i][j]==2)
 			{
 
-				DrawCircle(50 + j*100 , 100 + i*100 , 25 , 15);
+				DrawCircle(50 + j*100 , 100 + i*100 , 25);
 			}
 		}
 	}
@@ -155,15 +164,15 @@ void DrawXO()
 */
 bool CheckWinner()
 {
-	int i, j;
+	int row, col;
 	// horizontal check
-	for(i=0;i<3;i++)
+	for (row = 0; row < 3; row++)
 	{
-		for(j=1;j<3;j++)
+		for (col = 0; col < 3; col++)
 		{
-			if(board[i][0]!=0 && board[i][0]==board[i][j])
+			if (board[row][0] != 0 && board[row][0] == board[row][col])
 			{
-				if(j==2)
+				if (col == 2)
 				{
 					return true;
 				}
@@ -173,13 +182,13 @@ bool CheckWinner()
 		}
 	}
 	// vertical check
-	for(i=0;i<3;i++)
+	for(row = 0; row < 3; row++)
 	{
-		for(j=1;j<3;j++)
+		for(col = 1; col < 3; col++)
 		{
-			if(board[0][i]!=0 && board[0][i]==board[j][i])
+			if(board[0][row] != 0 && board[0][row] == board[col][row])
 			{
-				if(j==2)
+				if(col == 2)
 					return true;
 			}
 			else
@@ -193,22 +202,41 @@ bool CheckWinner()
 	return false;
 }
 
+
 /*
 	function to check if there is draw
 */
 bool CheckIfDraw()
 {
-	int i, j;
-	bool draw;
-	for(i=0;i<3;i++)
+	int row, col;
+	bool draw = true;
+	for(row = 0; row < 3; row++)
 	{
-		for(j=0;j<3;j++)
+		for(col = 0; col < 3; col++)
 		{
-			if(board[i][j]==0)
-				return false;
+			if(board[row][col] == 0)
+				draw = false;
 		}
 	}
-	return true;
+	return draw;
+}
+
+void menu(int choice)
+{
+    switch (choice)
+    {
+    case 1:
+    	colourize =0;
+    	Intialize();
+        break;
+    case 2:
+    	colourize = 1;
+    	Intialize();
+        break;
+    case 3:
+        exit(0);
+        break;
+    }
 }
 
 /*
@@ -217,12 +245,15 @@ bool CheckIfDraw()
 void Display()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	glClearColor(1, 1, 1, 1);
-	glColor3f(0, 0, 0);
+	glClearColor(0, 0, 0, 0);
+	if (colourize == 1)
+			glColor3f(0, 1, 1);
+	else if (colourize == 0 )
+			glColor3f(0, 1, 1);
 	if(turn == 1)
-		DrawString(GLUT_BITMAP_HELVETICA_18, "Player1's turn", 100, 30);
+		DrawString(GLUT_BITMAP_HELVETICA_18, "Player One (X)'s turn", 100, 30);
 	else
-		DrawString(GLUT_BITMAP_HELVETICA_18, "Player2's turn", 100, 30);
+		DrawString(GLUT_BITMAP_HELVETICA_18, "Player Two (O)'s turn", 100, 30);
 
 	DrawLines();
 	DrawXO();
@@ -251,10 +282,10 @@ void Display()
 		if(result == 0)
 			DrawString(GLUT_BITMAP_HELVETICA_18, "It's a draw", 110, 185);
 		if(result == 1)
-			DrawString(GLUT_BITMAP_HELVETICA_18, "Player1 wins", 95, 185);
+			DrawString(GLUT_BITMAP_HELVETICA_18, "Player Two (O)'s wins", 95, 185);
 		if(result == 2)
-			DrawString(GLUT_BITMAP_HELVETICA_18, "Player2 wins", 95, 185);
-		DrawString(GLUT_BITMAP_HELVETICA_18, "Do you want to continue (y/n)", 40, 210);
+			DrawString(GLUT_BITMAP_HELVETICA_18, "Player One (X) wins", 95, 185);
+		DrawString(GLUT_BITMAP_HELVETICA_18, "Do you want to continue (Y)", 40, 210);
 	}
 	glutSwapBuffers();
 }
@@ -281,7 +312,13 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_RGB|GLUT_DOUBLE);
 	glutInitWindowPosition(550,200);
 	glutInitWindowSize(300,350);
-	glutCreateWindow("Tic Tac Toe");
+	glutCreateWindow("Tic-Tac-Toe");
+	glutSetWindowTitle("Misere Tic-Tac-Toe");
+	glutCreateMenu(menu);
+	glutAddMenuEntry("Start Game", 1);
+	glutAddMenuEntry("Jazz", 2);
+	glutAddMenuEntry("Quit", 3);
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
 	glutReshapeFunc(Reshape);
 	glutDisplayFunc(Display);
 	glutKeyboardFunc(OnKeyPress);
